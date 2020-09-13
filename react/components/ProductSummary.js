@@ -17,7 +17,8 @@ import { useCssHandles } from 'vtex.css-handles'
 import ProductSummaryContext from './ProductSummaryContext'
 import { productShape } from '../utils/propTypes'
 import { mapCatalogProductToProductSummary } from '../utils/normalize'
-import { useSearchPage } from 'vtex.search-page-context/SearchPageContext'
+import useSimulation from '../hooks/useSimulation'
+import useIsPriceAsync from '../hooks/useIsPriceAsync'
 
 const PRODUCT_SUMMARY_MAX_WIDTH = 300
 const CSS_HANDLES = ['container', 'containerNormal', 'element', 'clearLink']
@@ -26,14 +27,6 @@ const ProductSummaryCustom = ({ product, actionOnClick, children, href }) => {
   const { isLoading, isHovering, selectedItem, query } = useProductSummary()
   const dispatch = useProductSummaryDispatch()
   const handles = useCssHandles(CSS_HANDLES)
-  const { searchQuery } = useSearchPage()
-
-  // trocar pra simulationBehavior = "async"
-  if (searchQuery?.variables?.simulationBehavior === 'default') {
-    // chamar aqui a query productWithSimulation
-    // colocar loading no componente (preco e botao de add to cart)
-    // dispatch SET_PRODUCT alterando o produto
-  }
 
   /*
     Use ProductListContext to send pixel events.
@@ -47,6 +40,22 @@ const ProductSummaryCustom = ({ product, actionOnClick, children, href }) => {
     // Triggers the event when the element is 75% visible
     threshold: 0.75,
     triggerOnce: true,
+  })
+
+  useSimulation({
+    product,
+    inView,
+    onComplete: (simulatedProduct) => {
+      dispatch({
+        type: 'SET_PRODUCT',
+        args: { product: simulatedProduct },
+      })
+
+      dispatch({
+        type: 'SET_LOADING',
+        args: { isLoading: false },
+      })
+    },
   })
 
   useEffect(() => {
@@ -170,8 +179,10 @@ ProductSummaryCustom.propTypes = {
 }
 
 function ProductSummaryWrapper(props) {
+  const { isPriceAsync } = useIsPriceAsync()
+
   return (
-    <ProductSummaryProvider {...props}>
+    <ProductSummaryProvider {...props} isLoading={isPriceAsync}>
       <ProductSummaryCustom {...props} />
     </ProductSummaryProvider>
   )
