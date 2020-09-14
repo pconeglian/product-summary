@@ -57,9 +57,17 @@ const useSimulation = ({ product, inView, onComplete }) => {
       mergedProduct.sku = mergedProduct.items.find(
         (item) => item.itemId === mergedProduct.sku.itemId
       )
-      mergedProduct.sku.seller = mergedProduct.sku.sellers.find(
-        (seller) => seller.sellerId === product.sku.seller.sellerId
-      )
+
+      if (mergedProduct.sku.sellers.length > 0) {
+        mergedProduct.sku.seller = mergedProduct.sku.sellers.find(
+          (seller) => seller.sellerId === product.sku.seller.sellerId
+        )
+      } else {
+        mergedProduct.sku.seller = {
+          commertialOffer: { Price: 0, ListPrice: 0 },
+        }
+      }
+
       mergedProduct.sku.image = product.sku.image
 
       onComplete(mergedProduct)
